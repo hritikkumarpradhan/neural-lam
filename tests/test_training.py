@@ -12,7 +12,7 @@ from neural_lam import config as nlconfig
 from neural_lam.create_graph import create_graph_from_datastore
 from neural_lam.datastore import DATASTORES
 from neural_lam.datastore.base import BaseRegularGridDatastore
-from neural_lam.models.graph_lam import GraphLAM
+from neural_lam.models import ARForecaster, ForecasterModule, GraphLAM
 from neural_lam.weather_dataset import WeatherDataModule
 from tests.conftest import init_datastore_example
 
@@ -42,7 +42,7 @@ def run_simple_training(datastore, set_output_std):
         deterministic=True,
         accelerator=device_name,
         # XXX: `devices` has to be set to 2 otherwise
-        # neural_lam.models.ar_model.ARModel.aggregate_and_plot_metrics fails
+        # neural_lam.models.forecaster_module.ForecasterModule.aggregate_and_plot_metrics fails
         # because it expects to aggregate over multiple devices
         devices=2,
         log_every_n_steps=1,
@@ -99,10 +99,16 @@ def run_simple_training(datastore, set_output_std):
         )
     )
 
-    model = GraphLAM(  # noqa
+    step_predictor = GraphLAM(  # noqa
         args=model_args,
         datastore=datastore,
         config=config,
+    )
+    forecaster = ARForecaster(
+        args=model_args, datastore=datastore, config=config, predictor=step_predictor
+    )
+    model = ForecasterModule(
+        args=model_args, datastore=datastore, config=config, forecaster=forecaster
     )
     wandb.init()
     trainer.fit(model=model, datamodule=data_module)

@@ -6,10 +6,10 @@ from .. import utils
 from ..config import NeuralLAMConfig
 from ..datastore import BaseDatastore
 from ..interaction_net import InteractionNet
-from .ar_model import ARModel
+from .step_predictor import StepPredictor
 
 
-class BaseGraphModel(ARModel):
+class BaseGraphModel(StepPredictor):
     """
     Base (abstract) class for graph-based models building on
     the encode-process-decode idea.
@@ -289,7 +289,7 @@ class BaseGraphModel(ARModel):
         """
         raise NotImplementedError("process_step not implemented")
 
-    def predict_step(self, prev_state, prev_prev_state, forcing):
+    def forward(self, prev_state, prev_prev_state, forcing):
         """
         Step state one step ahead using prediction model, X_{t-1}, X_t -> X_t+1
         prev_state: (B, num_grid_nodes, feature_dim), X_t

@@ -14,7 +14,7 @@ from loguru import logger
 # Local
 from . import utils
 from .config import load_config_and_datastore
-from .models import GraphLAM, HiLAM, HiLAMParallel
+from .models import ARForecaster, ForecasterModule, GraphLAM, HiLAM, HiLAMParallel
 from .weather_dataset import WeatherDataModule
 
 MODELS = {
@@ -287,8 +287,10 @@ def main(input_args=None):
             raise ValueError("devices should be 'auto' or a list of integers")
 
     # Load model parameters Use new args for model
-    ModelClass = MODELS[args.model]
-    model = ModelClass(args, config=config, datastore=datastore)
+    StepPredictorClass = MODELS[args.model]
+    step_predictor = StepPredictorClass(args, config=config, datastore=datastore)
+    forecaster = ARForecaster(args, config=config, datastore=datastore, predictor=step_predictor)
+    model = ForecasterModule(args, config=config, datastore=datastore, forecaster=forecaster)
 
     if args.eval:
         prefix = f"eval-{args.eval}-"
